@@ -1,6 +1,8 @@
 public class Constants {
 
     //constants
+    final static String ENTER_IP="please enter ip address";
+    final static String ENTER_PORT_NO="please enter port number";
     final static String INITIAL_STEP="welcome sign up or login";
     final static String LOGIN="login";
     final static String SIGNUP="sign up";
