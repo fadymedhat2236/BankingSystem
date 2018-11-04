@@ -5,7 +5,7 @@ public class Client {
     private String name;
     private String password;
     private String id;
-    private float amountOfMoney;
+    private double amountOfMoney;
     //to be removed when adding DB
     private ArrayList<Transaction> transactions;
 
@@ -13,7 +13,7 @@ public class Client {
         this.transactions= new ArrayList<Transaction>();
     }
 
-    public Client(String name, String password, float amountOfMoney, String id) {
+    public Client(String name, String password, double amountOfMoney, String id) {
         this.name = name;
         this.password = password;
         this.id = id;
@@ -44,11 +44,11 @@ public class Client {
 
     public void setId(String id) {
         this.id = id;
-    }public float getAmountOfmoney() {
+    }public double getAmountOfmoney() {
         return amountOfMoney;
     }
 
-    public void setAmountOfMoney(float amountOfmoney) {
+    public void setAmountOfMoney(double amountOfmoney) {
         this.amountOfMoney = amountOfmoney;
     }
 
@@ -65,10 +65,10 @@ public class Client {
         this.transactions.add(transaction);
 
     }
-    public synchronized void deposit(float money){
+    public synchronized void deposit(double money){
         this.amountOfMoney+=money;
     }
-    public synchronized void withdraw(float money){
+    public synchronized void withdraw(double money){
         this.amountOfMoney-=money;
     }
 
