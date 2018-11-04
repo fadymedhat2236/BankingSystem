@@ -1,13 +1,22 @@
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Protocol {
-    Socket socket;
-    DataOutputStream dout;
-    DataInputStream din;
+    private Socket socket;
+    private DataOutputStream dout;
+    private DataInputStream din;
+
+    //Client
+    private Client client;
+    //for client process this field isn't needed
+    //for server this is the connected client
 
     public Protocol(Socket socket) {
         this.socket = socket;
@@ -22,7 +31,6 @@ public class Protocol {
     public void startClient(){
         while(true){
             try{
-
                 String server_string = din.readUTF().toString();
                 Scanner user_input = new Scanner(System.in);
                 String user_response;
@@ -31,6 +39,17 @@ public class Protocol {
                 user_response = user_input.nextLine();
                 dout.writeUTF(user_response);
                 //TODO: logic for client
+                if(user_response.equals(Constants.LOGIN)){
+                    login_client();
+                    next_step_client();
+                }
+                else if(user_response.equals(Constants.SIGNUP)){
+                     sign_up_client();
+                     next_step_client();
+                }
+                else{
+
+                }
 
             }catch(IOException e){
                 //handle error
@@ -47,10 +66,12 @@ public class Protocol {
                 readString=din.readUTF().toString();
                 //TODO: logic for server
                 if(readString.equals(Constants.LOGIN)){
-                    System.out.println("Logged in");
+                    login();
+                    next_step();
                 }
                 else if(readString.equals(Constants.SIGNUP)){
-                    System.out.println("signed up");
+                   client =  sign_up();
+                   next_step();
                 }
                 else{
                     dout.writeUTF(Constants.ERROR);
@@ -63,6 +84,144 @@ public class Protocol {
             }
         }
 
+    }
+    //server functions
+    public Client sign_up ()throws IOException{
+        Client client = new Client();
+        String client_response;
+        //user name
+        dout.writeUTF(Constants.ENTER_YOUR_NAME);
+        client_response = din.readUTF();
+        client.setName(client_response);
+        //user password
+        dout.writeUTF(Constants.ENTER_YOUR_PASSWORD);
+        client_response = din.readUTF();
+        client.setPassword(client_response);
+        //user amount of money
+        dout.writeUTF(Constants.ENTER_YOUR_INITIAL_BALANCE);
+        client_response = din.readUTF();
+        client.setAmountOfMoney(Float.parseFloat(client_response));
+        // generate id (4 digits) uses charSet not numbers
+        String unique_id = randomID();
+        client.setId(unique_id);
+        dout.writeUTF(unique_id);
+        //store in DB
+            FileWriter writer = new FileWriter("dummyDB.txt", true);
+            writer.write("User:\n\t");
+            writer.write("name: "+client.getName()+"\n\t");
+            writer.write("password: "+client.getPassword()+"\n\t");
+            writer.write("balance: "+client.getAmountOfmoney()+"\n\t");
+            writer.write("id: "+client.getId()+"\n");
+            writer.close();
+        return client;
+    }
+    public String randomID(){
+        String CharSet = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890";
+        String numberSet = "0123456789";
+        String Token = "";
+        for (int a = 1; a <= 4; a++) {
+            Token += CharSet.charAt(new Random().nextInt(CharSet.length()));
+        }
+        return Token;
+    }
+    public void login(){
+
+    }
+    public void next_step() throws IOException{
+        while (true){
+            dout.writeUTF(Constants.REPEATED_STRING);
+            String user_choice = din.readUTF();
+            if(user_choice.equals(Constants.VIEW_CURRENT_BALANCE)){
+                dout.writeUTF(Constants.CURRENT_BALANCE+" : "+client.getAmountOfmoney()+"n");
+            }
+            else if(user_choice.equals(Constants.DEPOSIT_MONEY)){
+                dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
+                float money = Float.parseFloat(din.readUTF());
+                //TODO:need to check
+                client.deposit(money);
+            }
+            else if(user_choice.equals(Constants.WITHDRAW_FROM_YOUR_BALANCE)){
+                dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
+                float money = Float.parseFloat(din.readUTF());
+                //TODO:need to check
+                client.withdraw(money);
+            }
+            else if(user_choice.equals(Constants.TRANSFER_MONEY)){
+
+            }
+            else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
+
+            }
+            else if(user_choice.equals(Constants.LOGOUT)){
+
+            }
+            else{
+                //option not applicable
+            }
+        }
+    }
+    //client functions
+    public void sign_up_client() throws IOException{
+        String server_response;
+        String name,password,id;
+        float amountOfMoney;
+        Scanner scanner = new Scanner(System.in);
+        //name
+        server_response = din.readUTF().toString();
+        System.out.println(server_response);
+        name=scanner.nextLine();
+        dout.writeUTF(name);
+        //password
+        server_response = din.readUTF().toString();
+        System.out.println(server_response);
+        password=scanner.nextLine();
+        dout.writeUTF(password);
+        // initial balance
+        server_response = din.readUTF().toString();
+        System.out.println(server_response);
+        amountOfMoney=scanner.nextFloat();
+        dout.writeUTF(Float.toString(amountOfMoney));
+        //unique id
+        id = din.readUTF().toString();
+        System.out.println(id);
+    }
+    public void login_client(){
+
+    }
+    public void next_step_client() throws IOException{
+        //next_step for client
+        while(true){
+            Scanner scanner = new Scanner(System.in);
+            String server_options = din.readUTF();
+            System.out.println(server_options);
+            String user_choice = scanner.nextLine();
+            dout.writeUTF(user_choice);
+            if(user_choice.equals(Constants.VIEW_CURRENT_BALANCE)){
+                System.out.println(din.readUTF());
+            }
+            else if(user_choice.equals(Constants.DEPOSIT_MONEY)){
+                System.out.println(din.readUTF());
+                float money = scanner.nextFloat();
+                dout.writeUTF(Float.toString(money));
+            }
+            else if(user_choice.equals(Constants.WITHDRAW_FROM_YOUR_BALANCE)){
+                System.out.println(din.readUTF());
+                float money = scanner.nextFloat();
+                dout.writeUTF(Float.toString(money));
+            }
+            else if(user_choice.equals(Constants.TRANSFER_MONEY)){
+
+            }
+            else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
+
+            }
+            else if(user_choice.equals(Constants.LOGOUT)){
+
+            }
+            else{
+                //option not applicable
+            }
+        }
     }
 
     public Socket getSocket() {
