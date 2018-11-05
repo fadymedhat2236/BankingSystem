@@ -17,6 +17,7 @@ public class Protocol {
     private Client client;
     //for client process this field isn't needed
     //for server this is the connected client
+    constructions DB = new constructions();
 
     public Protocol(Socket socket) {
         this.socket = socket;
@@ -40,7 +41,9 @@ public class Protocol {
                 dout.writeUTF(user_response);
                 //TODO: logic for client
                 if(user_response.equals(Constants.LOGIN)){
-                    login_client();
+                   if(!login_client()) {
+                       continue;
+                   }
                     next_step_client();
                 }
                 else if(user_response.equals(Constants.SIGNUP)){
@@ -66,11 +69,16 @@ public class Protocol {
                 readString=din.readUTF().toString();
                 //TODO: logic for server
                 if(readString.equals(Constants.LOGIN)){
-                    login();
+                    client = login();
+                    if(client.getName().equals("")){
+                        continue;
+                    }
                     next_step();
                 }
                 else if(readString.equals(Constants.SIGNUP)){
                    client =  sign_up();
+                   //insert in DB
+                    DB.insert_new(client);
                    next_step();
                 }
                 else{
@@ -106,13 +114,7 @@ public class Protocol {
         client.setId(unique_id);
         dout.writeUTF(unique_id);
         //store in DB
-            FileWriter writer = new FileWriter("dummyDB.txt", true);
-            writer.write("User:\n\t");
-            writer.write("name: "+client.getName()+"\n\t");
-            writer.write("password: "+client.getPassword()+"\n\t");
-            writer.write("balance: "+client.getAmountOfmoney()+"\n\t");
-            writer.write("id: "+client.getId()+"\n");
-            writer.close();
+
         return client;
     }
     public String randomID(){
@@ -124,8 +126,20 @@ public class Protocol {
         }
         return Token;
     }
-    public void login(){
+    public Client login() throws IOException{
+        String account_num,password;
+        dout.writeUTF(Constants.ENTER_YOUR_ACCOUNT_NUMBER);
+        account_num = din.readUTF();
+        dout.writeUTF(Constants.ENTER_YOUR_PASSWORD);
+        password = din.readUTF();
+        Client client = DB.getClient(password,account_num);
+        if(client.equals("")){
+            //error User not found
+            dout.writeUTF(Constants.USER_NOT_FOUND);
+        } else {
 
+        }
+        return client;
     }
     public void next_step() throws IOException{
         while (true){
@@ -184,9 +198,26 @@ public class Protocol {
         //unique id
         id = din.readUTF().toString();
         System.out.println(id);
-    }
-    public void login_client(){
 
+    }
+
+    public boolean login_client()throws IOException{
+        boolean logged_in = true;
+        String server_response = din.readUTF();
+        Scanner scanner = new Scanner(System.in);
+        System.out.println(server_response);
+        String account_num,password;
+        account_num = scanner.nextLine();
+        dout.writeUTF(account_num);
+        System.out.println(din.readUTF());
+        password = scanner.nextLine();
+        dout.writeUTF(password);
+        server_response = din.readUTF();
+        if(server_response.equals(Constants.USER_NOT_FOUND)){
+            System.out.println(server_response);
+            logged_in = false;
+        }
+        return logged_in;
     }
     public void next_step_client() throws IOException{
         //next_step for client

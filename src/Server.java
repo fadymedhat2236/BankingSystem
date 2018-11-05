@@ -13,9 +13,12 @@ public class Server
         try
         {
             ServerSocket s = new ServerSocket(1234);
+            constructions DB = new constructions();
+            DB.create_database();
+            DB.create_table_of_users();
+            DB.create_table_of_transactions() ;
             while (true)
             {
-
                 Socket c = s.accept();
 
                 System.out.println("ClientProcess Arrived");

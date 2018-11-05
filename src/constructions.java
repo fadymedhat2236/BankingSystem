@@ -14,7 +14,7 @@ public class constructions{
     public String driver = "com.mysql.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
-    public String pass = "Martinsql";
+    public String pass = "";
 
 
     public Connection create_database () {
@@ -91,6 +91,7 @@ public class constructions{
         }
         return con ;
     }
+
     public void insert_new(Client client)
     {
         try
@@ -107,12 +108,14 @@ public class constructions{
                     "'"+client.getPassword()+"'" + ")" ;
             stmt.executeUpdate(AddNewUser) ;
 
-            System.out.println("Inserted successfully");
+           // System.out.println("Inserted successfully");
         }
         catch (Exception e){
             System.out.println("Error : "+e);
         }
     }
+
+
 
     public void update_client(Client client){
         try
@@ -131,9 +134,9 @@ public class constructions{
         catch (Exception e){
             System.out.println("Error : "+e);
         }
-    }
+    } // smeha insert transaction
 
-    public Client getClient(Client client){
+    public Client getClient(String password , String id){
         Client retrieved = new Client();
         try{
             Class.forName(driver);
@@ -143,7 +146,7 @@ public class constructions{
             Statement stmt = con.createStatement();
             //Retrieve client
             String query = "SELECT id,unique_id,balance,username,password FROM users" +
-                    "WHERE unique_id =" +client.getId();
+                    "WHERE unique_id =" +id + " AND password = " + password;
             ResultSet resultSet = stmt.executeQuery(query) ;
             while(resultSet.next()){
                 retrieved.setAmountOfMoney(resultSet.getDouble("balance"));

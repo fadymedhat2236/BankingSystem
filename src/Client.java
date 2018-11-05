@@ -10,7 +10,7 @@ public class Client {
     private ArrayList<Transaction> transactions;
 
     public Client() {
-        this.transactions= new ArrayList<Transaction>();
+        this.transactions= new ArrayList<Transaction>(); this.name = "";
     }
 
     public Client(String name, String password, double amountOfMoney, String id) {
