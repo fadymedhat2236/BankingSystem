@@ -71,5 +71,7 @@ public class Client {
     public synchronized void withdraw(double money){
         this.amountOfMoney-=money;
     }
-
+    public String toString(){
+        return this.id+this.password;
+    }
 }

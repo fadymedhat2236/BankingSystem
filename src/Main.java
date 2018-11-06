@@ -5,16 +5,19 @@ import java.util.Random;
 
 public class Main {
     public static void main(String[] args){
-        try {
-            FileWriter writer = new FileWriter("dummyDB.txt", false);
-            writer.write("ayhaga");
-            writer.write("\r\n");   // write new line
-            writer.write("Good Bye!");
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
+        Client client = new Client();
+        String id = "7s8X" ;
+        String password = "1234" ;
+        String query = "SELECT "+
+                DBconstants.unique_id + ","+
+                DBconstants.balance + ","+
+                DBconstants.username + ","+
+                DBconstants.password + ","+
+                "FROM users " +
+                "WHERE unique_id = " +
+                "'" + id + "'"
+                + " AND password = " +
+                "'" + password + "'";
+        System.out.println(query);
     }
 }

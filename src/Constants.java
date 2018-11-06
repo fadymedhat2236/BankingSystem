@@ -27,5 +27,6 @@ public class Constants {
             "\n"+VIEW_TRANSACTIONS+" to view your transactions" +
             " \n"+ LOGOUT+" to logout\n";
     final static String CURRENT_BALANCE="your current balance is ";
-    final static String SPECIFY_AMOUNT_OF_MONEY="specify what amount of money\n";
+    final static String SPECIFY_AMOUNT_OF_MONEY="specify what amount of money\n" ;
+
 }

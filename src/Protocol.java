@@ -62,7 +62,7 @@ public class Protocol {
 
     // server protocol
     public void startServer(){
-        while(true){
+
             try {
                 String readString;
                 dout.writeUTF(Constants.INITIAL_STEP);
@@ -70,8 +70,9 @@ public class Protocol {
                 //TODO: logic for server
                 if(readString.equals(Constants.LOGIN)){
                     client = login();
+                    System.out.println(client);
                     if(client.getName().equals("")){
-                        continue;
+
                     }
                     next_step();
                 }
@@ -83,16 +84,17 @@ public class Protocol {
                 }
                 else{
                     dout.writeUTF(Constants.ERROR);
-                    break;
+
                 }
 
             }
             catch(IOException e){
                 //handle the error
+                System.out.println(e);
             }
         }
 
-    }
+
     //server functions
     public Client sign_up ()throws IOException{
         Client client = new Client();
