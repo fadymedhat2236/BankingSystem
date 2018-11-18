@@ -14,7 +14,7 @@ public class constructions{
     public String driver = "com.mysql.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
-    public String pass = "Martinsql";
+    public String pass = "";
 
 
     public Connection create_database () {

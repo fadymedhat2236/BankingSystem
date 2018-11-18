@@ -7,6 +7,7 @@ public class Constants {
     final static String LOGIN="login";
     final static String SIGNUP="sign up";
     final static String ERROR="error!";
+    final static String DONE = "done";
     final static String USER_NOT_FOUND = "user not found";
     final static String OPTION_NOT_DEFIEND="option not applicable";
     final static String ENTER_YOUR_ACCOUNT_NUMBER="enter your account number";
@@ -28,5 +29,6 @@ public class Constants {
             " \n"+ LOGOUT+" to logout\n";
     final static String CURRENT_BALANCE="your current balance is ";
     final static String SPECIFY_AMOUNT_OF_MONEY="specify what amount of money\n" ;
+    final static String SPECIFY_ACCOUNT_NUMBER="specify the account number to send money to\n" ;
 
 }

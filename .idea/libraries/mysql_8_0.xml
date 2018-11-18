@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="mysql-8.0">
+    <ANNOTATIONS>
+      <root url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" />
+    </JAVADOC>
+    <NATIVE>
+      <root url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" />
+    </NATIVE>
+    <SOURCES>
+      <root url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" />
+    </SOURCES>
+    <jarDirectory url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" recursive="false" />
+    <jarDirectory url="file://$USER_HOME$/Downloads/mysql-8.0.13-winx64" recursive="false" type="SOURCES" />
+  </library>
+</component>

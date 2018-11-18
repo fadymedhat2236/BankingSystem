@@ -139,37 +139,54 @@ public class Protocol {
             //error User not found
             dout.writeUTF(Constants.USER_NOT_FOUND);
         } else {
-
+            dout.writeUTF("found");
         }
         return client;
     }
     public void next_step() throws IOException{
+        System.out.println("logged in");
+        dout.writeUTF(Constants.REPEATED_STRING);
         while (true){
-            dout.writeUTF(Constants.REPEATED_STRING);
+           // dout.writeUTF();
             String user_choice = din.readUTF();
             if(user_choice.equals(Constants.VIEW_CURRENT_BALANCE)){
-                dout.writeUTF(Constants.CURRENT_BALANCE+" : "+client.getAmountOfmoney()+"n");
+                dout.writeUTF(Constants.CURRENT_BALANCE+" : "+client.getAmountOfmoney()+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.DEPOSIT_MONEY)){
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
                 float money = Float.parseFloat(din.readUTF());
                 //TODO:need to check
                 client.deposit(money);
+                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.WITHDRAW_FROM_YOUR_BALANCE)){
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
                 float money = Float.parseFloat(din.readUTF());
                 //TODO:need to check
                 client.withdraw(money);
+                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.TRANSFER_MONEY)){
+                dout.writeUTF(Constants.SPECIFY_ACCOUNT_NUMBER);
+                String account_number = (din.readUTF());
+                dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
+                Float money = Float.parseFloat(din.readUTF());
+                //look for account num if in DB OK
+                //else send to all servers to look for it
 
+
+                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
+                //load all transactions from DB
 
+
+
+                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.LOGOUT)){
-
+                //store client values again into DB
+                //and tells client to end the session
             }
             else{
                 //option not applicable
@@ -223,37 +240,12 @@ public class Protocol {
     }
     public void next_step_client() throws IOException{
         //next_step for client
+        Scanner scanner = new Scanner(System.in);
         while(true){
-            Scanner scanner = new Scanner(System.in);
-            String server_options = din.readUTF();
-            System.out.println(server_options);
+            System.out.println(din.readUTF());
             String user_choice = scanner.nextLine();
             dout.writeUTF(user_choice);
-            if(user_choice.equals(Constants.VIEW_CURRENT_BALANCE)){
-                System.out.println(din.readUTF());
-            }
-            else if(user_choice.equals(Constants.DEPOSIT_MONEY)){
-                System.out.println(din.readUTF());
-                float money = scanner.nextFloat();
-                dout.writeUTF(Float.toString(money));
-            }
-            else if(user_choice.equals(Constants.WITHDRAW_FROM_YOUR_BALANCE)){
-                System.out.println(din.readUTF());
-                float money = scanner.nextFloat();
-                dout.writeUTF(Float.toString(money));
-            }
-            else if(user_choice.equals(Constants.TRANSFER_MONEY)){
 
-            }
-            else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
-
-            }
-            else if(user_choice.equals(Constants.LOGOUT)){
-
-            }
-            else{
-                //option not applicable
-            }
         }
     }
 
