@@ -1,3 +1,4 @@
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 
 import java.io.DataInputStream;
@@ -51,9 +52,11 @@ public class Protocol {
                      next_step_client();
                 }
                 else{
-
+                    System.out.println(din.readUTF());
+                    continue;
                 }
-
+                System.out.println(din.readUTF());
+                break;
             }catch(IOException e){
                 //handle error
             }
@@ -64,29 +67,30 @@ public class Protocol {
     public void startServer(){
 
             try {
-                String readString;
-                dout.writeUTF(Constants.INITIAL_STEP);
-                readString=din.readUTF().toString();
-                //TODO: logic for server
-                if(readString.equals(Constants.LOGIN)){
-                    client = login();
-                    System.out.println(client);
-                    if(client.getName().equals("")){
-
+                while(true) {
+                    String readString;
+                    dout.writeUTF(Constants.INITIAL_STEP);
+                    readString = din.readUTF().toString();
+                    //TODO: logic for server
+                    if (readString.equals(Constants.LOGIN)) {
+                        client = login();
+                        System.out.println(client);
+                        if (client.getName().equals("")) {
+                            continue;
+                        }
+                        next_step();
+                    } else if (readString.equals(Constants.SIGNUP)) {
+                        client = sign_up();
+                        //insert in DB
+                        DB.insert_new(client);
+                        next_step();
+                    } else {
+                        dout.writeUTF(Constants.ERROR);
+                        continue;
                     }
-                    next_step();
+                    dout.writeUTF(Constants.GOODBYE);
+                    break;
                 }
-                else if(readString.equals(Constants.SIGNUP)){
-                   client =  sign_up();
-                   //insert in DB
-                    DB.insert_new(client);
-                   next_step();
-                }
-                else{
-                    dout.writeUTF(Constants.ERROR);
-
-                }
-
             }
             catch(IOException e){
                 //handle the error
@@ -119,6 +123,7 @@ public class Protocol {
 
         return client;
     }
+
     public String randomID(){
         String CharSet = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890";
         String numberSet = "0123456789";
@@ -128,6 +133,7 @@ public class Protocol {
         }
         return Token;
     }
+
     public Client login() throws IOException{
         String account_num,password;
         dout.writeUTF(Constants.ENTER_YOUR_ACCOUNT_NUMBER);
@@ -135,7 +141,7 @@ public class Protocol {
         dout.writeUTF(Constants.ENTER_YOUR_PASSWORD);
         password = din.readUTF();
         Client client = DB.getClient(password,account_num);
-        if(client.equals("")){
+        if(client.getName().equals("")){
             //error User not found
             dout.writeUTF(Constants.USER_NOT_FOUND);
         } else {
@@ -143,28 +149,42 @@ public class Protocol {
         }
         return client;
     }
+
     public void next_step() throws IOException{
         System.out.println("logged in");
         dout.writeUTF(Constants.REPEATED_STRING);
         while (true){
-           // dout.writeUTF();
             String user_choice = din.readUTF();
             if(user_choice.equals(Constants.VIEW_CURRENT_BALANCE)){
-                dout.writeUTF(Constants.CURRENT_BALANCE+" : "+client.getAmountOfmoney()+"\n"+Constants.REPEATED_STRING);
+                Client c=DB.getClient(client.getPassword(),client.getId());
+                dout.writeUTF(Constants.CURRENT_BALANCE+" : "+c.getAmountOfmoney()+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.DEPOSIT_MONEY)){
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
                 float money = Float.parseFloat(din.readUTF());
-                //TODO:need to check
-                client.deposit(money);
-                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+                if(money<=0){
+                    dout.writeUTF(Constants.ERROR + "\n"+ Constants.REPEATED_STRING);
+                }
+                else {
+                    Client c=DB.getClient(client.getPassword(),client.getId());
+                    System.out.println(c);
+                    c.deposit(money);
+                    DB.update_client(c);
+                    dout.writeUTF(Constants.DONE + "\n"+ Constants.REPEATED_STRING);
+                }
             }
             else if(user_choice.equals(Constants.WITHDRAW_FROM_YOUR_BALANCE)){
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
                 float money = Float.parseFloat(din.readUTF());
-                //TODO:need to check
-                client.withdraw(money);
-                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+                Client c=DB.getClient(client.getPassword(),client.getId());
+                if(money<=0 || money> c.getAmountOfmoney()){
+                    dout.writeUTF(Constants.ERROR + "\n"+ Constants.REPEATED_STRING);
+                }
+                else {
+                    c.withdraw(money);
+                    DB.update_client(c);
+                    dout.writeUTF(Constants.DONE + "\n" + Constants.REPEATED_STRING);
+                }
             }
             else if(user_choice.equals(Constants.TRANSFER_MONEY)){
                 dout.writeUTF(Constants.SPECIFY_ACCOUNT_NUMBER);
@@ -188,12 +208,14 @@ public class Protocol {
             else if(user_choice.equals(Constants.LOGOUT)){
                 //store client values again into DB
                 //and tells client to end the session
+                break;
             }
             else{
-                //option not applicable
+                dout.writeUTF(Constants.ERROR + "\n"+ Constants.REPEATED_STRING);
             }
         }
     }
+
     //client functions
     public void sign_up_client() throws IOException{
         String server_response;
@@ -239,13 +261,18 @@ public class Protocol {
         }
         return logged_in;
     }
+
     public void next_step_client() throws IOException{
         //next_step for client
         Scanner scanner = new Scanner(System.in);
         while(true){
-            System.out.println(din.readUTF());
+            String s;
+            s=din.readUTF();
+            System.out.println(s);
             String user_choice = scanner.nextLine();
             dout.writeUTF(user_choice);
+            if(user_choice.equals(Constants.LOGOUT))
+                break;
 
         }
     }

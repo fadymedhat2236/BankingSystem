@@ -72,6 +72,6 @@ public class Client {
         this.amountOfMoney-=money;
     }
     public String toString(){
-        return this.id+this.password;
+        return this.id+this.password + this.amountOfMoney;
     }
 }

@@ -15,7 +15,7 @@ public class constructions{
     public String driver = "com.mysql.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
-    public String pass = "Martinsql";
+    public String pass = "";
 
 
     public Connection create_database () {
@@ -123,19 +123,18 @@ public class constructions{
         }
     }
 
-
-
     public void update_client(Client client){
         try
         {
             Class.forName(driver);
             //Open a connection
-            Connection con  = DriverManager.getConnection(url , username , pass) ;
+            String URL = "jdbc:mysql://localhost/database3";
+            Connection con  = DriverManager.getConnection(URL , username , pass) ;
             //System.out.println("Found it");
             Statement stmt = con.createStatement();
             String AddNewUser = "UPDATE users SET " +DBconstants.balance +
                     " = " + client.getAmountOfmoney()
-                    +" WHERE unique_id in" + "('" + client.getId() + "')" ;
+                    +" WHERE unique_id =" + "'" + client.getId() + "'" ;
             stmt.executeUpdate(AddNewUser) ;
 
             System.out.println("updated successfully");
@@ -181,6 +180,7 @@ public class constructions{
         }
         return retrieved ;
     }
+
     public ArrayList<Transaction> getTransactions(Client client){
         ArrayList<Transaction>all_transactions = new ArrayList<>();
         try{
