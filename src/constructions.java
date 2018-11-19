@@ -2,6 +2,7 @@
 
 
 import com.sun.deploy.util.SessionState;
+import com.sun.org.apache.regexp.internal.RE;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,7 +15,7 @@ public class constructions{
     public String driver = "com.mysql.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
-    public String pass = "";
+    public String pass = "Martinsql";
 
 
     public Connection create_database () {
@@ -25,7 +26,7 @@ public class constructions{
             //Open a connection
             con  = DriverManager.getConnection(url , username , pass) ;
             //System.out.println("Found it");
-            String sql = "CREATE DATABASE IF NOT EXISTS Database2";
+            String sql = "CREATE DATABASE IF NOT EXISTS Database3";
             Statement statement = con.createStatement();
             statement.executeUpdate(sql);
             statement.close();
@@ -40,7 +41,7 @@ public class constructions{
     public  Connection create_table_of_users(){
         Connection con = null ;
         try{
-            url = url + "/Database2" ;
+            url = url + "/Database3" ;
             // Register jdbc driver
             Class.forName(driver);
             //Open a connection
@@ -69,7 +70,7 @@ public class constructions{
     public Connection create_table_of_transactions(){
         Connection con = null ;
         try{
-            String url = "jdbc:mysql://localhost/Database2";
+            String url = "jdbc:mysql://localhost/Database3";
             // Register jdbc driver
             Class.forName(driver);
             //Open a connection
@@ -82,6 +83,8 @@ public class constructions{
                     DBconstants.amount+" double," +
                     DBconstants.amount_from_before + " double," +
                     DBconstants.amount_to_before + " double," +
+                    DBconstants.from_bank_name + " VARCHAR (15)," +
+                    DBconstants.to_bank_name + " VARCHAR (15)," +
                     "PRIMARY KEY (id)" +
                     ")" ;
             Statement statement = con.createStatement();
@@ -99,7 +102,7 @@ public class constructions{
         {
             Class.forName(driver);
             //Open a connection
-            String url = "jdbc:mysql://localhost/Database2";
+            String url = "jdbc:mysql://localhost/Database3";
             Connection con  = DriverManager.getConnection(url , username , pass) ;
             //System.out.println("Found it");
             Statement stmt = con.createStatement();
@@ -130,7 +133,7 @@ public class constructions{
             Connection con  = DriverManager.getConnection(url , username , pass) ;
             //System.out.println("Found it");
             Statement stmt = con.createStatement();
-            String AddNewUser = "UPDATE users TABLE SET " +DBconstants.balance +
+            String AddNewUser = "UPDATE users SET " +DBconstants.balance +
                     " = " + client.getAmountOfmoney()
                     +" WHERE unique_id in" + "('" + client.getId() + "')" ;
             stmt.executeUpdate(AddNewUser) ;
@@ -146,7 +149,7 @@ public class constructions{
         Client retrieved = new Client();
         try{
             System.out.println("Trying to connect ......   ");
-            String url = "jdbc:mysql://localhost/Database2";
+            String url = "jdbc:mysql://localhost/Database3";
             Class.forName(driver);
             //Open a connection
             Connection con  = DriverManager.getConnection(url , username , pass) ;
@@ -202,6 +205,8 @@ public class constructions{
                     DBconstants.amount + "," +
                     DBconstants.amount_to_before + "," +
                     DBconstants.amount_from_before + "," +
+                    DBconstants.from_bank_name + "," +
+                    DBconstants.to_bank_name + "," +
                     " FROM transactions" +
                     "WHERE to="+"'"+client.getId()+"'"+"OR from="
                     +"'"+client.getId()+"'" ;
@@ -223,5 +228,127 @@ public class constructions{
             System.out.println("Error : "+e);
         }
         return all_transactions ;
+
+    }
+
+    boolean check_if_user_is_here (String id){
+        try{
+        String url = "jdbc:mysql://localhost/Database3";
+
+        Class.forName(driver);
+        //Open a connection
+        Connection con  = DriverManager.getConnection(url , username , pass) ;
+
+        //System.out.println("Found it");
+        Statement stmt = con.createStatement();
+
+        String query =  //Retrieve client
+                "SELECT "+
+                        DBconstants.unique_id + ","+
+                        DBconstants.balance + ","+
+                        DBconstants.username + ","+
+                        DBconstants.password +
+                        " FROM users " +
+                        "WHERE "  + DBconstants.unique_id  + " = " +
+                        "'" + id + "'" ;
+        ResultSet resultSet =  stmt.executeQuery(query) ;
+        if(resultSet.next())
+            return true ;
+        else return false ;
+        }
+        catch (Exception io){
+            System.out.println("ERROR :  " +io);
+        }
+        return false ;
+    }
+
+   public boolean transfer_money(Transaction transaction){
+        try
+        {
+            String url = "jdbc:mysql://localhost/Database3";
+
+            Class.forName(driver);
+            //Open a connection
+            Connection con  = DriverManager.getConnection(url , username , pass) ;
+
+            //System.out.println("Found it");
+            Statement stmt = con.createStatement();
+
+            String query =  //Retrieve client
+                    "SELECT "+
+                DBconstants.unique_id + ","+
+                DBconstants.balance + ","+
+                DBconstants.username + ","+
+                DBconstants.password +
+                " FROM users " +
+                "WHERE "  + DBconstants.unique_id  + " = " +
+                "'" + transaction.getTo_id() + "'" ;
+            if(check_if_user_is_here(transaction.getTo_id())==false)
+                return false ;
+            else
+            {
+                double from_before = 0 , to_before = 0  ;
+                String query1 = "SELECT "+
+                        DBconstants.unique_id + ","+
+                        DBconstants.balance + ","+
+                        DBconstants.username + ","+
+                        DBconstants.password +
+                        " FROM users " +
+                        "WHERE "  + DBconstants.unique_id  + " = " +
+                        "'" + transaction.getFrom_id() + "'" ;
+                ResultSet resultSet = stmt.executeQuery(query1) ;
+                if(resultSet.next()){
+                    from_before = resultSet.getDouble(DBconstants.balance) ;
+                }
+
+                query1 = "SELECT "+
+                        DBconstants.unique_id + ","+
+                        DBconstants.balance + ","+
+                        DBconstants.username + ","+
+                        DBconstants.password +
+                        " FROM users " +
+                        "WHERE "  + DBconstants.unique_id  + " = " +
+                        "'" + transaction.getTo_id() + "'" ;
+                resultSet = stmt.executeQuery(query1) ;
+
+                if (resultSet.next()){
+                    to_before = resultSet.getDouble(DBconstants.balance) ;
+                }
+
+                String insert_new_transaction = "INSERT INTO transactions ("+DBconstants.from_id+"," +
+                        DBconstants.to_id + "," +  DBconstants.amount + "," +
+                        DBconstants.amount_from_before + "," +
+                        DBconstants.amount_to_before
+                        + ")"+
+                        "VALUES " +
+                        "(" + "'" + transaction.getFrom_id()+ "'" + "," +
+                        "'" + transaction.getTo_id() + "'" + ","+
+                        transaction.getAmount()+ "," +
+                        from_before + "," +
+                        to_before
+                        + ")" ;
+                stmt.executeUpdate(insert_new_transaction) ;
+
+                // Update from and to clients
+
+                double data1  = from_before-transaction.getAmount() ;
+                String update = "UPDATE users SET " +DBconstants.balance +
+                        " = " + data1
+                        +" WHERE unique_id in" + "('" + transaction.getFrom_id() + "')" ;
+                stmt.executeUpdate(update) ;
+
+                data1 = to_before + transaction.getAmount() ;
+                update = "UPDATE users SET " +DBconstants.balance +
+                        " = " + data1
+                        +" WHERE unique_id in" + "('" + transaction.getTo_id() + "')" ;
+                stmt.executeUpdate(update) ;
+                return true ;
+            }
+        }
+        catch (Exception io)
+        {
+            System.out.println("Error  : " + io);
+        }
+        return  true ;
     }
 }

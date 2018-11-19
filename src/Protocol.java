@@ -174,7 +174,8 @@ public class Protocol {
                 //look for account num if in DB OK
                 //else send to all servers to look for it
 
-
+                Transaction transaction = new Transaction(client.getId(),account_number,money);
+                DB.transfer_money(transaction);
                 dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
