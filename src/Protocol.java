@@ -107,8 +107,11 @@ public class Protocol {
             }
         }
 
-    private void connect_with_server() {
-
+    private void connect_with_server() throws IOException{
+        String from_id = din.readUTF();
+        String to_id = din.readUTF();
+        Float money = Float.parseFloat(din.readUTF());
+        DB.transfer_money(new Transaction(from_id,to_id,money));
     }
 
 
@@ -213,10 +216,18 @@ public class Protocol {
                 //else send to all servers to look for it
                 else{
                    //connect to servers
-                   Socket c = new Socket("localhost",1234);
+                   //get ip address of all servers
+                   Socket c = new Socket("192.168.1.7",1234);
                    DataInputStream din_server = new DataInputStream(c.getInputStream());
                    DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
-                   dout.writeUTF("police");
+                   dout_server.writeUTF("police");
+                   dout_server.writeUTF(client.getId());
+                   dout_server.writeUTF(account_number);
+                   dout_server.writeUTF(Float.toString(money));
+                   String response = din_server.readUTF();
+                   if(response.equals(Constants.DONE)){
+
+                   }
                }
             }
             else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
