@@ -1,0 +1,17 @@
+<Servers>
+    <Server
+            name="Bank1"
+            ip="localhost"
+            suffix="2D3F"
+    />
+    <Server
+            name="Bank2"
+            ip="192.168.1.2"
+            suffix="1C5B"
+    />
+    <Server
+            name="Bank3"
+            ip="192.168.1.3"
+            suffix="4E2D"
+    />
+</Servers>
