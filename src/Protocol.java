@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Random;
 import java.util.Scanner;
@@ -33,6 +34,8 @@ public class Protocol {
     public void startClient(){
         while(true){
             try{
+                //to be changed
+                dout.writeUTF("client");
                 String server_string = din.readUTF().toString();
                 Scanner user_input = new Scanner(System.in);
                 String user_response;
@@ -68,6 +71,12 @@ public class Protocol {
 
             try {
                 while(true) {
+                    String who = din.readUTF();
+                    if(who.equals("police")){
+                        System.out.println("police arrived");
+                        connect_with_server();
+                        break;
+                    }
                     String readString;
                     dout.writeUTF(Constants.INITIAL_STEP);
                     readString = din.readUTF().toString();
@@ -97,6 +106,10 @@ public class Protocol {
                 System.out.println(e);
             }
         }
+
+    private void connect_with_server() {
+
+    }
 
 
     //server functions
@@ -192,11 +205,19 @@ public class Protocol {
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
                 Float money = Float.parseFloat(din.readUTF());
                 //look for account num if in DB OK
-                //else send to all servers to look for it
 
                 Transaction transaction = new Transaction(client.getId(),account_number,money);
-                DB.transfer_money(transaction);
-                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+               if(DB.transfer_money(transaction)){
+                   dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+               }
+                //else send to all servers to look for it
+                else{
+                   //connect to servers
+                   Socket c = new Socket("localhost",1234);
+                   DataInputStream din_server = new DataInputStream(c.getInputStream());
+                   DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
+                   dout.writeUTF("police");
+               }
             }
             else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
                 //load all transactions from DB
