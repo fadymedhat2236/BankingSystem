@@ -6,7 +6,9 @@ public class Constants {
     final static String INITIAL_STEP="welcome sign up or login";
     final static String LOGIN="login";
     final static String SIGNUP="sign up";
+    final static String LOGGED_IN = "welcome ";
     final static String ERROR="error!";
+    final static String MONEY_ERROR = "not valid amount of money";
     final static String DONE = "done";
     final static String USER_NOT_FOUND = "user not found";
     final static String OPTION_NOT_DEFIEND="option not applicable";
@@ -20,7 +22,7 @@ public class Constants {
     final static String TRANSFER_MONEY="t";
     final static String VIEW_TRANSACTIONS="v";
     final static String LOGOUT="l";
-    final static String REPEATED_STRING="logged in.Specify what operation to do next" +
+    final static String REPEATED_STRING="Specify what operation to do next" +
             "\n"+VIEW_CURRENT_BALANCE+ " to view your current balance " +
             "\n"+ DEPOSIT_MONEY+" to deposit " +
             "\n"+ WITHDRAW_FROM_YOUR_BALANCE+" to withdraw" +

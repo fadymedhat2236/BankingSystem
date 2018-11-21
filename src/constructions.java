@@ -184,6 +184,7 @@ public class constructions{
     public ArrayList<Transaction> getTransactions(Client client){
         ArrayList<Transaction>all_transactions = new ArrayList<>();
         try{
+            String url = "jdbc:mysql://localhost/Database3";
             Class.forName(driver);
             //Open a connection
             Connection con  = DriverManager.getConnection(url , username , pass) ;
@@ -206,9 +207,9 @@ public class constructions{
                     DBconstants.amount_to_before + "," +
                     DBconstants.amount_from_before + "," +
                     DBconstants.from_bank_name + "," +
-                    DBconstants.to_bank_name + "," +
-                    " FROM transactions" +
-                    "WHERE to="+"'"+client.getId()+"'"+"OR from="
+                    DBconstants.to_bank_name  +
+                    " FROM transactions " +
+                    "WHERE to_id = "+"'"+client.getId()+"'"+" OR from_id = "
                     +"'"+client.getId()+"'" ;
             ResultSet resultSet = stmt.executeQuery(query) ;
             while (resultSet.next()){

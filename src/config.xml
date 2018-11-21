@@ -1,17 +1,26 @@
-<Servers>
-    <Server
-            name="Bank1"
-            ip="localhost"
-            suffix="2D3F"
+<System>
+    <Servers>
+        <Server
+                name="Bank1"
+                ip="localhost"
+                suffix="2D3F"
+                portNo="1234"
+        />
+        <Server
+                name="Bank2"
+                ip="192.168.1.2"
+                suffix="1C5B"
+                portNo="1234"
+        />
+        <Server
+                name="Bank3"
+                ip="192.168.1.3"
+                suffix="4E2D"
+                portNo="1234"
+        />
+    </Servers>
+    <Client
+        ip="localhost"
+        portNo="1234"
     />
-    <Server
-            name="Bank2"
-            ip="192.168.1.2"
-            suffix="1C5B"
-    />
-    <Server
-            name="Bank3"
-            ip="192.168.1.3"
-            suffix="4E2D"
-    />
-</Servers>
+</System>

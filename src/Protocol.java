@@ -1,12 +1,17 @@
 import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -107,12 +112,6 @@ public class Protocol {
             }
         }
 
-    private void connect_with_server() throws IOException{
-        String from_id = din.readUTF();
-        String to_id = din.readUTF();
-        Float money = Float.parseFloat(din.readUTF());
-        DB.transfer_money(new Transaction(from_id,to_id,money));
-    }
 
 
     //server functions
@@ -168,7 +167,8 @@ public class Protocol {
 
     public void next_step() throws IOException{
         System.out.println("logged in");
-        dout.writeUTF(Constants.REPEATED_STRING);
+
+        dout.writeUTF(Constants.LOGGED_IN+client.getName()+"\n"+Constants.REPEATED_STRING);
         while (true){
             String user_choice = din.readUTF();
             if(user_choice.equals(Constants.VIEW_CURRENT_BALANCE)){
@@ -177,65 +177,73 @@ public class Protocol {
             }
             else if(user_choice.equals(Constants.DEPOSIT_MONEY)){
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
-                float money = Float.parseFloat(din.readUTF());
-                if(money<=0){
-                    dout.writeUTF(Constants.ERROR + "\n"+ Constants.REPEATED_STRING);
-                }
-                else {
+                float money = get_valid_money('d');
                     Client c=DB.getClient(client.getPassword(),client.getId());
                     System.out.println(c);
                     c.deposit(money);
                     DB.update_client(c);
                     dout.writeUTF(Constants.DONE + "\n"+ Constants.REPEATED_STRING);
-                }
+
             }
             else if(user_choice.equals(Constants.WITHDRAW_FROM_YOUR_BALANCE)){
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
-                float money = Float.parseFloat(din.readUTF());
+                float money=get_valid_money('w');
                 Client c=DB.getClient(client.getPassword(),client.getId());
-                if(money<=0 || money> c.getAmountOfmoney()){
-                    dout.writeUTF(Constants.ERROR + "\n"+ Constants.REPEATED_STRING);
-                }
-                else {
+                 //valid money
                     c.withdraw(money);
                     DB.update_client(c);
                     dout.writeUTF(Constants.DONE + "\n" + Constants.REPEATED_STRING);
-                }
+
             }
             else if(user_choice.equals(Constants.TRANSFER_MONEY)){
                 dout.writeUTF(Constants.SPECIFY_ACCOUNT_NUMBER);
                 String account_number = (din.readUTF());
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
-                Float money = Float.parseFloat(din.readUTF());
-                //look for account num if in DB OK
+                Float money = get_valid_money('t');
+                //check amount of money
+                client = DB.getClient(client.getPassword(),client.getId());
+                //money is valid
+                    //look for account num if in DB OK
+                //account number length =4 hence it's in the same DB
+                    Transaction transaction = new Transaction(client.getId(),account_number,money);
+                    if(DB.transfer_money(transaction)){
+                        dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+                    }
+                    //else get the suffix of the server and send to it
+                    else{
+                        //connect to servers as client
+                        //get ip address of all servers
+                        ServerObject serverObject= getServer(account_number.substring(0,3));
+                        //if no server
+                        if(serverObject.getPortNo()==0){
+                            dout.writeUTF(Constants.ERROR+"\n"+Constants.REPEATED_STRING);
+                        }
+                        else{
+                            Socket c = new Socket(serverObject.getIp(),serverObject.getPortNo());
+                            DataInputStream din_server = new DataInputStream(c.getInputStream());
+                            DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
+                            dout_server.writeUTF("police");
+                            dout_server.writeUTF(client.getId());
+                            dout_server.writeUTF(account_number.substring(4,7));
+                            dout_server.writeUTF(Float.toString(money));
+                            System.out.println(din_server.readUTF());
 
-                Transaction transaction = new Transaction(client.getId(),account_number,money);
-               if(DB.transfer_money(transaction)){
-                   dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
-               }
-                //else send to all servers to look for it
-                else{
-                   //connect to servers
-                   //get ip address of all servers
-                   Socket c = new Socket("192.168.1.7",1234);
-                   DataInputStream din_server = new DataInputStream(c.getInputStream());
-                   DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
-                   dout_server.writeUTF("police");
-                   dout_server.writeUTF(client.getId());
-                   dout_server.writeUTF(account_number);
-                   dout_server.writeUTF(Float.toString(money));
-                   String response = din_server.readUTF();
-                   if(response.equals(Constants.DONE)){
+                        }
 
-                   }
-               }
+                    }
+
+
             }
             else if(user_choice.equals(Constants.VIEW_TRANSACTIONS)){
                 //load all transactions from DB
+                ArrayList<Transaction>transactions=DB.getTransactions(client);
+                String server_response="";
+                for(int i=0;i<transactions.size();i++){
+                    server_response+=transactions.get(i).getFrom_id()+" "+transactions.get(i).getTo_id()+" "+transactions.get(i).getAmount()+"\n";
+                }
 
 
-
-                dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+                dout.writeUTF(server_response+"\n"+Constants.DONE+"\n"+Constants.REPEATED_STRING);
             }
             else if(user_choice.equals(Constants.LOGOUT)){
                 //store client values again into DB
@@ -243,10 +251,23 @@ public class Protocol {
                 break;
             }
             else{
-                dout.writeUTF(Constants.ERROR + "\n"+ Constants.REPEATED_STRING);
+                dout.writeUTF(Constants.OPTION_NOT_DEFIEND + "\n"+ Constants.REPEATED_STRING);
             }
         }
     }
+
+    public void connect_with_server() throws IOException{
+        String from_id = din.readUTF();
+        String to_id = din.readUTF();
+        Float money = Float.parseFloat(din.readUTF());
+        if(DB.transfer_money(new Transaction(from_id,to_id,money))){
+            dout.writeUTF(Constants.DONE);
+        }
+        else{
+            dout.writeUTF(Constants.ERROR);
+        }
+    }
+
 
     //client functions
     public void sign_up_client() throws IOException{
@@ -307,6 +328,57 @@ public class Protocol {
                 break;
 
         }
+    }
+    public float get_valid_money(char op) throws IOException{
+        String money_string = din.readUTF();
+        float money;
+        while(!money_string.chars().allMatch(Character::isDigit)){
+            dout.writeUTF(Constants.MONEY_ERROR);
+            money_string = din.readUTF();
+        }
+        money = Float.parseFloat(money_string);
+        Client c=DB.getClient(client.getPassword(),client.getId());
+        while(money<=0 ||(((op=='w')||(op=='t'))&& money> c.getAmountOfmoney())){
+            dout.writeUTF(Constants.MONEY_ERROR+"\n");
+            money = Float.parseFloat(din.readUTF());
+        }
+        return money;
+    }
+
+    public ServerObject getServer(String suffix){
+        String name="",ip="";
+        int portNo=0;
+        try {
+            File inputFile = new File("\\config.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(inputFile);
+            doc.getDocumentElement().normalize();
+            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+            NodeList nList = doc.getElementsByTagName("Server");
+
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                Node nNode = nList.item(temp);
+
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+
+                    if(suffix.equals(eElement.getAttribute("suffix"))){
+                        name = eElement.getAttribute("name");
+                        ip=eElement.getAttribute("ip");
+                        portNo=Integer.parseInt(eElement.getAttribute("portNo"));
+                        break;
+                    }
+
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new ServerObject(name,ip,suffix,portNo);
     }
 
     public Socket getSocket() {
