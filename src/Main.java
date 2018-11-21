@@ -47,6 +47,8 @@ public class Main {
             System.out.println(System.getProperty("user.dir"));
             URL path = Server.class.getResource("config.xml");
             System.out.println(path);
+            String path2 = Server.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            System.out.println(path2+"config.xml");
         } catch (Exception e) {
             e.printStackTrace();
         }

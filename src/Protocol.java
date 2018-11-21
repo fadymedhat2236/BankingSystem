@@ -213,7 +213,7 @@ public class Protocol {
                     else{
                         //connect to servers as client
                         //get ip address of all servers
-                        ServerObject serverObject= getServer(account_number.substring(0,3));
+                        ServerObject serverObject= getServer(account_number.substring(0,4));
                         //if no server
                         if(serverObject.getPortNo()==0){
                             dout.writeUTF(Constants.ERROR+"\n"+Constants.REPEATED_STRING);
@@ -224,7 +224,7 @@ public class Protocol {
                             DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
                             dout_server.writeUTF("police");
                             dout_server.writeUTF(client.getId());
-                            dout_server.writeUTF(account_number.substring(4,7));
+                            dout_server.writeUTF(account_number.substring(4,8));
                             dout_server.writeUTF(Float.toString(money));
                             System.out.println(din_server.readUTF());
 
@@ -346,10 +346,13 @@ public class Protocol {
     }
 
     public ServerObject getServer(String suffix){
+        System.out.println("suffix:"+suffix);
         String name="",ip="";
         int portNo=0;
         try {
-            File inputFile = new File("\\config.xml");
+            String path = Server.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            path = path.replace("BankProject.jar","");
+            File inputFile = new File(path+"\\config.xml");
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(inputFile);
@@ -360,14 +363,15 @@ public class Protocol {
             for (int temp = 0; temp < nList.getLength(); temp++) {
                 Node nNode = nList.item(temp);
 
-
+                System.out.println("still searching");
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-
+                    System.out.println("not just yet");
                     if(suffix.equals(eElement.getAttribute("suffix"))){
                         name = eElement.getAttribute("name");
                         ip=eElement.getAttribute("ip");
                         portNo=Integer.parseInt(eElement.getAttribute("portNo"));
+                        System.out.println("Found");
                         break;
                     }
 
