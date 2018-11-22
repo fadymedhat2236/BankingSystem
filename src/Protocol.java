@@ -219,6 +219,9 @@ public class Protocol {
                             dout.writeUTF(Constants.ERROR+"\n"+Constants.REPEATED_STRING);
                         }
                         else{
+                            client = DB.getClient(client.getPassword(),client.getId());
+                            client.withdraw(money);
+                            DB.update_client(client);
                             Socket c = new Socket(serverObject.getIp(),serverObject.getPortNo());
                             DataInputStream din_server = new DataInputStream(c.getInputStream());
                             DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
@@ -226,7 +229,7 @@ public class Protocol {
                             dout_server.writeUTF(client.getId());
                             dout_server.writeUTF(account_number.substring(4,8));
                             dout_server.writeUTF(Float.toString(money));
-                            System.out.println(din_server.readUTF());
+                            System.out.println(din_server.readUTF()+"\n"+Constants.REPEATED_STRING);
 
                         }
 
@@ -329,6 +332,7 @@ public class Protocol {
 
         }
     }
+
     public float get_valid_money(char op) throws IOException{
         String money_string = din.readUTF();
         float money;
