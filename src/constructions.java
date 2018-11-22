@@ -284,8 +284,10 @@ public class constructions{
                 " FROM users " +
                 "WHERE "  + DBconstants.unique_id  + " = " +
                 "'" + transaction.getTo_id() + "'" ;
-            if(check_if_user_is_here(transaction.getTo_id())==false)
-                return false ;
+            if(check_if_user_is_here(transaction.getTo_id())==false) {
+                return false;
+            }
+
             else
             {
                 double from_before = 0 , to_before = 0  ;
@@ -301,6 +303,8 @@ public class constructions{
                 if(resultSet.next()){
                     from_before = resultSet.getDouble(DBconstants.balance) ;
                 }
+
+                else from_before = transaction.getAmount_from_before() ;
 
                 query1 = "SELECT "+
                         DBconstants.unique_id + ","+
