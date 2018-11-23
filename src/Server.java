@@ -17,6 +17,7 @@ public class Server
             DB.create_database();
             DB.create_table_of_users();
             DB.create_table_of_transactions() ;
+            
             while (true)
             {
                 Socket c = s.accept();

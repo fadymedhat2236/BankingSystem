@@ -15,7 +15,7 @@ public class constructions{
     public String driver = "com.mysql.cj.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
-    public String pass = "";
+    public String pass = "Martinsql";
 
 
     public Connection create_database () {
@@ -179,6 +179,76 @@ public class constructions{
             System.out.println("Error : "+e);
         }
         return retrieved ;
+    }
+
+    public Client get_client (String id){
+        Client retrieved = new Client() ;
+        try{
+            System.out.println("Trying to connect ......   ");
+            String url = "jdbc:mysql://localhost/Database3";
+            Class.forName(driver);
+            //Open a connection
+            Connection con  = DriverManager.getConnection(url , username , pass) ;
+            System.out.println("Connected ..................");
+            //System.out.println("Found it");
+            Statement stmt = con.createStatement();
+            //Retrieve client
+            String query = "SELECT "+
+                    DBconstants.unique_id + ","+
+                    DBconstants.balance + ","+
+                    DBconstants.username + ","+
+                    DBconstants.password +
+                    " FROM users " +
+                    "WHERE "  + DBconstants.unique_id  + " = " +
+                    "'" + id + "'"
+                    ;
+            ResultSet resultSet = stmt.executeQuery(query) ;
+            while(resultSet.next()){
+                retrieved.setAmountOfMoney(resultSet.getDouble("balance"));
+                retrieved.setId(resultSet.getString("unique_id"));
+                retrieved.setPassword(resultSet.getString("password"));
+                retrieved.setName(resultSet.getString("username"));
+            }
+            resultSet.close();
+        }
+        catch (Exception e) {
+            System.out.println("Error : " + e);
+        }return retrieved;
+    }
+
+    public void insert_transaction(Transaction transaction){
+        try{
+            String url = "jdbc:mysql://localhost/Database3";
+            Class.forName(driver);
+            //Open a connection
+            Connection con  = DriverManager.getConnection(url , username , pass) ;
+
+            //System.out.println("Found it");
+            Statement stmt = con.createStatement();
+
+            String insert = "INSERT INTO transactions (" +
+                    DBconstants.from_id + "," +
+                    DBconstants.to_id  +  "," +
+                    DBconstants.amount + ","  +
+                    DBconstants.amount_from_before + "," +
+                    DBconstants.amount_to_before + "," +
+                    DBconstants.from_name + "," +
+                    DBconstants.to_name +
+                    ")" + " VALUES (" +
+                    "'" + transaction.getFrom_id() + "'" + "," +
+                    "'" + transaction.getTo_id() + "'" + "," +
+                    transaction.getAmount() + "," +
+                    transaction.getAmount_from_before() + "," +
+                    transaction.getAmount_to_before() + "," +
+                    "'"+ transaction.getFrom_name() +"'" + "," +
+                    "'" + transaction.getTo_name() +"'" +
+                    ")"
+                    ;
+            stmt.executeQuery(insert) ;
+        }
+        catch (Exception e){
+            System.out.println("Error : "+e);
+        }
     }
 
     public ArrayList<Transaction> getTransactions(Client client){
