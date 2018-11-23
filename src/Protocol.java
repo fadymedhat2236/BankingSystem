@@ -1,5 +1,3 @@
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -8,9 +6,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URL;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
@@ -206,8 +202,12 @@ public class Protocol {
                     //look for account num if in DB OK
                 //account number length =4 hence it's in the same DB
                     Transaction transaction = new Transaction(client.getId(),account_number,money);
-                    if(DB.transfer_money(transaction)){
+                    if(account_number.length()==4){
+                        if(DB.transfer_money(transaction))
                         dout.writeUTF(Constants.DONE+"\n"+Constants.REPEATED_STRING);
+
+                        else
+                            dout.writeUTF(Constants.ERROR+"\n"+Constants.REPEATED_STRING);
                     }
                     //else get the suffix of the server and send to it
                     else{
@@ -219,17 +219,28 @@ public class Protocol {
                             dout.writeUTF(Constants.ERROR+"\n"+Constants.REPEATED_STRING);
                         }
                         else{
-                            client = DB.getClient(client.getPassword(),client.getId());
-                            client.withdraw(money);
-                            DB.update_client(client);
+
+
                             Socket c = new Socket(serverObject.getIp(),serverObject.getPortNo());
                             DataInputStream din_server = new DataInputStream(c.getInputStream());
                             DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
                             dout_server.writeUTF("police");
                             dout_server.writeUTF(client.getId());
                             dout_server.writeUTF(account_number.substring(4,8));
+                            client = DB.getClient(client.getPassword(),client.getId());
+                            dout_server.writeUTF(Double.toString(client.getAmountOfmoney()));
+                            String from_name=getServer_fromIp(get_IP()).getName();
+                            if(from_name.length()>0){
+                                dout_server.writeUTF(client.getName()+"("+from_name+")");
+                            }
+                            else{
+                                dout_server.writeUTF(client.getName()+"(out)");
+                            }
                             dout_server.writeUTF(Float.toString(money));
-                            System.out.println(din_server.readUTF()+"\n"+Constants.REPEATED_STRING);
+                            client = DB.getClient(client.getPassword(),client.getId());
+                            client.withdraw(money);
+                            DB.update_client(client);
+                            dout.writeUTF(din_server.readUTF()+"\n"+Constants.REPEATED_STRING);
 
                         }
 
@@ -242,7 +253,9 @@ public class Protocol {
                 ArrayList<Transaction>transactions=DB.getTransactions(client);
                 String server_response="";
                 for(int i=0;i<transactions.size();i++){
-                    server_response+=transactions.get(i).getFrom_id()+" "+transactions.get(i).getTo_id()+" "+transactions.get(i).getAmount()+"\n";
+                    server_response+="from : "+transactions.get(i).getFrom_id()+"("+transactions.get(i).getFrom_name()+")"+"\t\t"
+                            +"to : "+transactions.get(i).getTo_id()+"("+transactions.get(i).getTo_name()+")"+"\t\t"
+                            +"amount : "+transactions.get(i).getAmount()+"\n";
                 }
 
 
@@ -262,8 +275,13 @@ public class Protocol {
     public void connect_with_server() throws IOException{
         String from_id = din.readUTF();
         String to_id = din.readUTF();
+        Float from_before = Float.parseFloat(din.readUTF());
+        String from_name = din.readUTF();
         Float money = Float.parseFloat(din.readUTF());
-        if(DB.transfer_money(new Transaction(from_id,to_id,money))){
+        Transaction transaction = new Transaction(from_id,to_id,money);
+        transaction.setAmount_from_before(from_before);
+        transaction.setFrom_name(from_name);
+        if(DB.transfer_money(transaction)){
             dout.writeUTF(Constants.DONE);
         }
         else{
@@ -337,13 +355,13 @@ public class Protocol {
         String money_string = din.readUTF();
         float money;
         while(!money_string.chars().allMatch(Character::isDigit)){
-            dout.writeUTF(Constants.MONEY_ERROR);
+            dout.writeUTF(Constants.MONEY_ERROR+"\n"+Constants.MONEY_VALID);
             money_string = din.readUTF();
         }
         money = Float.parseFloat(money_string);
         Client c=DB.getClient(client.getPassword(),client.getId());
         while(money<=0 ||(((op=='w')||(op=='t'))&& money> c.getAmountOfmoney())){
-            dout.writeUTF(Constants.MONEY_ERROR+"\n");
+            dout.writeUTF(Constants.MONEY_ERROR+"\n"+Constants.MONEY_VALID);
             money = Float.parseFloat(din.readUTF());
         }
         return money;
@@ -354,8 +372,8 @@ public class Protocol {
         String name="",ip="";
         int portNo=0;
         try {
-            String path = Server.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-            path = path.replace("BankProject.jar","");
+            String path = Protocol.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            path = path.replace("Server.jar","");
             File inputFile = new File(path+"\\config.xml");
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -388,6 +406,93 @@ public class Protocol {
 
         return new ServerObject(name,ip,suffix,portNo);
     }
+    public ServerObject getServer_fromIp(String ip){
+        String name="";
+        int portNo=0;
+        String suffix="";
+        try {
+            String path = Protocol.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            path = path.replace("Server.jar","");
+            File inputFile = new File(path+"\\config.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(inputFile);
+            doc.getDocumentElement().normalize();
+            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+            NodeList nList = doc.getElementsByTagName("Server");
+
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                Node nNode = nList.item(temp);
+
+                System.out.println("still searching");
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    System.out.println("not just yet");
+                    if(ip.equals(eElement.getAttribute("ip"))){
+                        name = eElement.getAttribute("name");
+                        suffix=eElement.getAttribute("suffix");
+                        portNo=Integer.parseInt(eElement.getAttribute("portNo"));
+                        System.out.println("Found");
+                        break;
+                    }
+
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new ServerObject(name,ip,suffix,portNo);
+    }
+    //get IP
+    public String get_IP(){
+        String ip="";
+        try(final DatagramSocket socket = new DatagramSocket()){
+            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+             ip = socket.getLocalAddress().getHostAddress();
+            System.out.println(ip);
+        }
+        catch (Exception e){
+
+        }
+        return ip;
+    }
+
+    //for client process to get ip and portNo to connect to
+    public static ServerObject  getServer_data(){
+
+        String ip="";
+        int portNo=0;
+        try {
+            String path = Protocol.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            path = path.replace("Client.jar","");
+            File inputFile = new File(path+"\\config.xml");
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(inputFile);
+            doc.getDocumentElement().normalize();
+            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+            NodeList nList = doc.getElementsByTagName("Client");
+
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                Node nNode = nList.item(temp);
+
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                        ip=eElement.getAttribute("ip");
+                        portNo=Integer.parseInt(eElement.getAttribute("portNo"));
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return new ServerObject("",ip,"",portNo);
+    }
+
+
 
     public Socket getSocket() {
         return socket;

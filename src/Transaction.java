@@ -5,24 +5,24 @@ public class Transaction {
     private double amount;
     private double amount_from_before;
     private double amount_to_before;
-    private String from_bank ;
-    private String to_bank ;
+    private String from_name ;
+    private String to_name ;
 
 
-    public String getFrom_bank() {
-        return from_bank;
+    public String getFrom_name() {
+        return from_name;
     }
 
-    public void setFrom_bank(String from_bank) {
-        this.from_bank = from_bank;
+    public void setFrom_name(String from_bank) {
+        this.from_name = from_bank;
     }
 
-    public String getTo_bank() {
-        return to_bank;
+    public String getTo_name() {
+        return to_name;
     }
 
-    public void setTo_bank(String to_bank) {
-        this.to_bank = to_bank;
+    public void setTo_name(String to_bank) {
+        this.to_name = to_bank;
     }
 
 

@@ -9,6 +9,7 @@ public class Constants {
     final static String LOGGED_IN = "welcome ";
     final static String ERROR="error!";
     final static String MONEY_ERROR = "not valid amount of money";
+    final static String MONEY_VALID = "enter valid amount of money";
     final static String DONE = "done";
     final static String USER_NOT_FOUND = "user not found";
     final static String OPTION_NOT_DEFIEND="option not applicable";

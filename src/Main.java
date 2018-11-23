@@ -13,6 +13,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Random;
@@ -51,6 +53,14 @@ public class Main {
             System.out.println(path2+"config.xml");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        try(final DatagramSocket socket = new DatagramSocket()){
+            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+            String ip = socket.getLocalAddress().getHostAddress();
+            System.out.println(ip);
+        }
+        catch (Exception e){
+
         }
 
     }

@@ -15,7 +15,8 @@ public class ClientProcess {
         int port_no = in.nextInt();
         */
         try{
-            Socket socket = new Socket("localhost",1234);
+            ServerObject serverObject = Protocol.getServer_data();
+            Socket socket = new Socket(serverObject.getIp(),serverObject.getPortNo());
             Protocol protocol = new Protocol(socket);
             protocol.startClient();
             protocol.getDin().close();

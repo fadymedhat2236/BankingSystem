@@ -17,6 +17,6 @@ public class DBconstants {
     public final static String amount_from_before = "amount_from_before" ;
     public final static String amount_to_before = "amount_to_before" ;
     public final static String amount = "amount" ;
-    public final static String from_bank_name = "from_bank_name" ;
-    public final static String to_bank_name = "to_bank_name" ;
+    public final static String from_name = "from_name" ;
+    public final static String to_name = "to_name" ;
 }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class constructions{
 
-    public String driver = "com.mysql.jdbc.Driver";
+    public String driver = "com.mysql.cj.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
     public String pass = "";
@@ -83,8 +83,8 @@ public class constructions{
                     DBconstants.amount+" double," +
                     DBconstants.amount_from_before + " double," +
                     DBconstants.amount_to_before + " double," +
-                    DBconstants.from_bank_name + " VARCHAR (15)," +
-                    DBconstants.to_bank_name + " VARCHAR (15)," +
+                    DBconstants.from_name + " VARCHAR (15)," +
+                    DBconstants.to_name + " VARCHAR (15)," +
                     "PRIMARY KEY (id)" +
                     ")" ;
             Statement statement = con.createStatement();
@@ -206,8 +206,8 @@ public class constructions{
                     DBconstants.amount + "," +
                     DBconstants.amount_to_before + "," +
                     DBconstants.amount_from_before + "," +
-                    DBconstants.from_bank_name + "," +
-                    DBconstants.to_bank_name  +
+                    DBconstants.from_name + "," +
+                    DBconstants.to_name  +
                     " FROM transactions " +
                     "WHERE to_id = "+"'"+client.getId()+"'"+" OR from_id = "
                     +"'"+client.getId()+"'" ;
@@ -223,6 +223,10 @@ public class constructions{
                         (resultSet.getDouble(DBconstants.amount_from_before));
                 all_transactions.get(index_now).setAmount_to_before(resultSet.getDouble
                         (DBconstants.amount_to_before));
+                all_transactions.get(index_now).setFrom_name(resultSet.getString(
+                        (DBconstants.from_name)));
+                all_transactions.get(index_now).setTo_name(resultSet.getString(
+                        (DBconstants.to_name)));
             }
         }
         catch (Exception e){
@@ -291,6 +295,7 @@ public class constructions{
             else
             {
                 double from_before = 0 , to_before = 0  ;
+                String from_name="",to_name="";
                 String query1 = "SELECT "+
                         DBconstants.unique_id + ","+
                         DBconstants.balance + ","+
@@ -302,9 +307,13 @@ public class constructions{
                 ResultSet resultSet = stmt.executeQuery(query1) ;
                 if(resultSet.next()){
                     from_before = resultSet.getDouble(DBconstants.balance) ;
+                    from_name = resultSet.getString(DBconstants.username);
                 }
 
-                else from_before = transaction.getAmount_from_before() ;
+                else {
+                    from_before = transaction.getAmount_from_before() ;
+                    from_name = transaction.getFrom_name();
+                }
 
                 query1 = "SELECT "+
                         DBconstants.unique_id + ","+
@@ -318,20 +327,26 @@ public class constructions{
 
                 if (resultSet.next()){
                     to_before = resultSet.getDouble(DBconstants.balance) ;
+                    to_name = resultSet.getString(DBconstants.username);
                 }
 
                 String insert_new_transaction = "INSERT INTO transactions ("+DBconstants.from_id+"," +
                         DBconstants.to_id + "," +  DBconstants.amount + "," +
                         DBconstants.amount_from_before + "," +
-                        DBconstants.amount_to_before
+                        DBconstants.amount_to_before   +","+
+                        DBconstants.from_name + ","+
+                        DBconstants.to_name
                         + ")"+
                         "VALUES " +
                         "(" + "'" + transaction.getFrom_id()+ "'" + "," +
                         "'" + transaction.getTo_id() + "'" + ","+
                         transaction.getAmount()+ "," +
                         from_before + "," +
-                        to_before
+                        to_before + ","+
+                       "'"+ from_name+"'"+","+
+                        "'"+to_name+"'"
                         + ")" ;
+                System.out.println(insert_new_transaction);
                 stmt.executeUpdate(insert_new_transaction) ;
 
                 // Update from and to clients
