@@ -1,8 +1,14 @@
+import com.sun.xml.internal.messaging.saaj.packaging.mime.util.BASE64DecoderStream;
+import com.sun.xml.internal.messaging.saaj.packaging.mime.util.BASE64EncoderStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -17,51 +23,17 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 public class Main {
-    public static void main(String[] args){
-        try {
-            File inputFile = new File("src\\config.xml");
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(inputFile);
-            doc.getDocumentElement().normalize();
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-            NodeList nList = doc.getElementsByTagName("Server");
-            System.out.println("----------------------------");
 
-            for (int temp = 0; temp < nList.getLength(); temp++) {
-                Node nNode = nList.item(temp);
-                System.out.println("\nCurrent Element :" + nNode.getNodeName());
 
-                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                    Element eElement = (Element) nNode;
-                    System.out.println("server name : "
-                            + eElement.getAttribute("name"));
-                    System.out.println("server ip : "
-                            + eElement.getAttribute("ip"));
-                    System.out.println("server suffix : "
-                            + eElement.getAttribute("suffix"));
-
-                }
-            }
-            System.out.println(System.getProperty("user.dir"));
-            URL path = Server.class.getResource("config.xml");
-            System.out.println(path);
-            String path2 = Server.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-            System.out.println(path2+"config.xml");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try(final DatagramSocket socket = new DatagramSocket()){
-            socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-            String ip = socket.getLocalAddress().getHostAddress();
-            System.out.println(ip);
-        }
-        catch (Exception e){
-
-        }
-
+    public static void main(String[] args) {
+        System.out.println(CryptString.Encrypt("asdasdase"));
     }
+
+
+
 }

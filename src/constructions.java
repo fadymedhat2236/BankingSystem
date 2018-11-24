@@ -15,7 +15,7 @@ public class constructions{
     public String driver = "com.mysql.cj.jdbc.Driver";
     public String url = "jdbc:mysql://localhost";
     public String username = "root";
-    public String pass = "Martinsql";
+    public String pass = "";
 
 
     public Connection create_database () {
@@ -30,7 +30,7 @@ public class constructions{
             Statement statement = con.createStatement();
             statement.executeUpdate(sql);
             statement.close();
-            System.out.println("Coneecteion succedded");
+           // System.out.println("Coneecteion succedded");
         }
         catch (Exception e){
             System.out.println("Error "+ e);
@@ -137,22 +137,19 @@ public class constructions{
                     +" WHERE unique_id =" + "'" + client.getId() + "'" ;
             stmt.executeUpdate(AddNewUser) ;
 
-            System.out.println("updated successfully");
         }
         catch (Exception e){
             System.out.println("Error : "+e);
         }
-    } // smeha insert transaction
+    }
 
     public Client getClient(String password , String id){
         Client retrieved = new Client();
         try{
-            System.out.println("Trying to connect ......   ");
             String url = "jdbc:mysql://localhost/Database3";
             Class.forName(driver);
             //Open a connection
             Connection con  = DriverManager.getConnection(url , username , pass) ;
-            System.out.println("Connected ..................");
             //System.out.println("Found it");
             Statement stmt = con.createStatement();
             //Retrieve client
@@ -184,12 +181,10 @@ public class constructions{
     public Client get_client (String id){
         Client retrieved = new Client() ;
         try{
-            System.out.println("Trying to connect ......   ");
             String url = "jdbc:mysql://localhost/Database3";
             Class.forName(driver);
             //Open a connection
             Connection con  = DriverManager.getConnection(url , username , pass) ;
-            System.out.println("Connected ..................");
             //System.out.println("Found it");
             Statement stmt = con.createStatement();
             //Retrieve client
@@ -244,7 +239,7 @@ public class constructions{
                     "'" + transaction.getTo_name() +"'" +
                     ")"
                     ;
-            stmt.executeQuery(insert) ;
+            stmt.executeUpdate(insert) ;
         }
         catch (Exception e){
             System.out.println("Error : "+e);
@@ -416,7 +411,6 @@ public class constructions{
                        "'"+ from_name+"'"+","+
                         "'"+to_name+"'"
                         + ")" ;
-                System.out.println(insert_new_transaction);
                 stmt.executeUpdate(insert_new_transaction) ;
 
                 // Update from and to clients

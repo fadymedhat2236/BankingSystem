@@ -12,7 +12,8 @@ public class Server
     {
         try
         {
-            ServerSocket s = new ServerSocket(1234);
+
+            ServerSocket s = new ServerSocket(Protocol.getServer_fromIp(Protocol.get_IP()).getPortNo());
             constructions DB = new constructions();
             DB.create_database();
             DB.create_table_of_users();
@@ -21,8 +22,6 @@ public class Server
             while (true)
             {
                 Socket c = s.accept();
-
-                System.out.println("ClientProcess Arrived");
                 clientHandler ch = new clientHandler(c);
                 //handle client in parallel
                 Thread t = new Thread(ch);

@@ -7,6 +7,7 @@ public class Constants {
     final static String LOGIN="login";
     final static String SIGNUP="sign up";
     final static String LOGGED_IN = "welcome ";
+    final static String YOUR_UNIQUE_ID = "your unique id is: ";
     final static String ERROR="error!";
     final static String MONEY_ERROR = "not valid amount of money";
     final static String MONEY_VALID = "enter valid amount of money";

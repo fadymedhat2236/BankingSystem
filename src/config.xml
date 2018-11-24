@@ -2,15 +2,15 @@
     <Servers>
         <Server
                 name="Bank1"
-                ip="localhost"
+                ip="192.168.1.7"
                 suffix="2D3F"
-                portNo="1234"
+                portNo="1235"
         />
         <Server
                 name="Bank2"
                 ip="192.168.1.2"
                 suffix="1C5B"
-                portNo="1234"
+                portNo="1266"
         />
         <Server
                 name="Bank3"
@@ -20,7 +20,7 @@
         />
     </Servers>
     <Client
-        ip="localhost"
-        portNo="1234"
+        ip="192.168.1.7"
+        portNo="1235"
     />
 </System>

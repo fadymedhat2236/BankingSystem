@@ -74,17 +74,17 @@ public class Protocol {
                 while(true) {
                     String who = din.readUTF();
                     if(who.equals("police")){
-                        System.out.println("police arrived");
+                        //another server
                         connect_with_server();
                         break;
                     }
+                    //client
                     String readString;
                     dout.writeUTF(Constants.INITIAL_STEP);
                     readString = din.readUTF().toString();
                     //TODO: logic for server
                     if (readString.equals(Constants.LOGIN)) {
                         client = login();
-                        System.out.println(client);
                         if (client.getName().equals("")) {
                             continue;
                         }
@@ -120,16 +120,20 @@ public class Protocol {
         client.setName(client_response);
         //user password
         dout.writeUTF(Constants.ENTER_YOUR_PASSWORD);
-        client_response = din.readUTF();
+        //decrypt the password
+        client_response = CryptString.Decrypt(din.readUTF());
         client.setPassword(client_response);
         //user amount of money
         dout.writeUTF(Constants.ENTER_YOUR_INITIAL_BALANCE);
         client_response = din.readUTF();
         client.setAmountOfMoney(Float.parseFloat(client_response));
-        // generate id (4 digits) uses charSet not numbers
+        // generate id (4 digits) uses charSet and numbers
         String unique_id = randomID();
+        while (DB.check_if_user_is_here(unique_id)){
+            unique_id = randomID();
+        }
         client.setId(unique_id);
-        dout.writeUTF(unique_id);
+        dout.writeUTF(Constants.YOUR_UNIQUE_ID+": "+unique_id);
         //store in DB
 
         return client;
@@ -150,7 +154,8 @@ public class Protocol {
         dout.writeUTF(Constants.ENTER_YOUR_ACCOUNT_NUMBER);
         account_num = din.readUTF();
         dout.writeUTF(Constants.ENTER_YOUR_PASSWORD);
-        password = din.readUTF();
+        //decrypt the password
+        password = CryptString.Decrypt(din.readUTF());
         Client client = DB.getClient(password,account_num);
         if(client.getName().equals("")){
             //error User not found
@@ -175,7 +180,6 @@ public class Protocol {
                 dout.writeUTF(Constants.SPECIFY_AMOUNT_OF_MONEY);
                 float money = get_valid_money('d');
                     Client c=DB.getClient(client.getPassword(),client.getId());
-                    System.out.println(c);
                     c.deposit(money);
                     DB.update_client(c);
                     dout.writeUTF(Constants.DONE + "\n"+ Constants.REPEATED_STRING);
@@ -227,20 +231,35 @@ public class Protocol {
                             dout_server.writeUTF("police");
                             dout_server.writeUTF(client.getId());
                             dout_server.writeUTF(account_number.substring(4,8));
-                            client = DB.getClient(client.getPassword(),client.getId());
-                            dout_server.writeUTF(Double.toString(client.getAmountOfmoney()));
-                            String from_name=getServer_fromIp(get_IP()).getName();
-                            if(from_name.length()>0){
-                                dout_server.writeUTF(client.getName()+"("+from_name+")");
+                            String found = din_server.readUTF();
+                            if(found.equals("yes")){
+                                client = DB.getClient(client.getPassword(),client.getId());
+                                dout_server.writeUTF(Double.toString(client.getAmountOfmoney()));
+                                String from_name=getServer_fromIp(get_IP()).getName();
+                                if(from_name.length()>0){
+                                    dout_server.writeUTF(client.getName()+"("+from_name+")");
+                                }
+                                else{
+                                    dout_server.writeUTF(client.getName()+"(out)");
+                                }
+                                dout_server.writeUTF(Float.toString(money));
+                                String to_name = din_server.readUTF();
+                                Double to_before = Double.parseDouble(din_server.readUTF());
+                                Transaction transaction_inserted = new Transaction(client.getId(),account_number.substring(4,8),money);
+                                transaction_inserted.setFrom_name(client.getName());
+                                transaction_inserted.setTo_name(to_name);
+                                client = DB.getClient(client.getPassword(),client.getId());
+                                transaction_inserted.setAmount_from_before(client.getAmountOfmoney());
+                                transaction_inserted.setAmount_to_before(to_before);
+                                DB.insert_transaction(transaction_inserted);
+                                client = DB.getClient(client.getPassword(),client.getId());
+                                client.withdraw(money);
+                                DB.update_client(client);
+                                dout.writeUTF(din_server.readUTF()+"\n"+Constants.REPEATED_STRING);
+                            }else{
+                                dout.writeUTF(Constants.USER_NOT_FOUND+"\n"+Constants.REPEATED_STRING);
                             }
-                            else{
-                                dout_server.writeUTF(client.getName()+"(out)");
-                            }
-                            dout_server.writeUTF(Float.toString(money));
-                            client = DB.getClient(client.getPassword(),client.getId());
-                            client.withdraw(money);
-                            DB.update_client(client);
-                            dout.writeUTF(din_server.readUTF()+"\n"+Constants.REPEATED_STRING);
+
 
                         }
 
@@ -275,18 +294,37 @@ public class Protocol {
     public void connect_with_server() throws IOException{
         String from_id = din.readUTF();
         String to_id = din.readUTF();
-        Float from_before = Float.parseFloat(din.readUTF());
-        String from_name = din.readUTF();
-        Float money = Float.parseFloat(din.readUTF());
-        Transaction transaction = new Transaction(from_id,to_id,money);
-        transaction.setAmount_from_before(from_before);
-        transaction.setFrom_name(from_name);
-        if(DB.transfer_money(transaction)){
-            dout.writeUTF(Constants.DONE);
+        if(DB.check_if_user_is_here(to_id)){
+            //user found
+            dout.writeUTF("yes");
+            Client to_client = DB.get_client(to_id);
+            Double to_before = to_client.getAmountOfmoney();
+            String to_name  = to_client.getName();
+            Float from_before = Float.parseFloat(din.readUTF());
+            String from_name = din.readUTF();
+            Float money = Float.parseFloat(din.readUTF());
+            String to_bank_name = getServer_fromIp(get_IP()).getName();
+            if(to_bank_name.length()>0){
+               to_name+="("+to_bank_name+")";
+            }
+            else{
+                to_name+="(out)";
+            }
+            dout.writeUTF(to_name);
+            dout.writeUTF(Double.toString(to_before));
+            Transaction transaction = new Transaction(from_id,to_id,money);
+            transaction.setAmount_from_before(from_before);
+            transaction.setFrom_name(from_name);
+            if(DB.transfer_money(transaction)){
+                dout.writeUTF(Constants.DONE);
+            }
+            else{
+                dout.writeUTF(Constants.ERROR);
+            }
+        }else{
+            dout.writeUTF("no");
         }
-        else{
-            dout.writeUTF(Constants.ERROR);
-        }
+
     }
 
 
@@ -305,11 +343,17 @@ public class Protocol {
         server_response = din.readUTF().toString();
         System.out.println(server_response);
         password=scanner.nextLine();
-        dout.writeUTF(password);
+        //send password encrypted
+        dout.writeUTF(CryptString.Encrypt(password));
         // initial balance
         server_response = din.readUTF().toString();
         System.out.println(server_response);
-        amountOfMoney=scanner.nextFloat();
+        String money_string = scanner.nextLine();
+        while((!(money_string.chars().allMatch(Character::isDigit)))||(Double.parseDouble(money_string)<0)){
+            System.out.println(Constants.MONEY_ERROR + "\n" + Constants.MONEY_VALID);
+            money_string = scanner.nextLine();
+        }
+        amountOfMoney=Float.parseFloat(money_string);
         dout.writeUTF(Float.toString(amountOfMoney));
         //unique id
         id = din.readUTF().toString();
@@ -327,7 +371,8 @@ public class Protocol {
         dout.writeUTF(account_num);
         System.out.println(din.readUTF());
         password = scanner.nextLine();
-        dout.writeUTF(password);
+        //send password encrypted
+        dout.writeUTF(CryptString.Encrypt(password));
         server_response = din.readUTF();
         if(server_response.equals(Constants.USER_NOT_FOUND)){
             System.out.println(server_response);
@@ -354,21 +399,17 @@ public class Protocol {
     public float get_valid_money(char op) throws IOException{
         String money_string = din.readUTF();
         float money;
-        while(!money_string.chars().allMatch(Character::isDigit)){
+        Client c=DB.getClient(client.getPassword(),client.getId());
+        while((!money_string.chars().allMatch(Character::isDigit))||
+                (Float.parseFloat(money_string)<=0 ||(((op=='w')||(op=='t'))&& Float.parseFloat(money_string)> c.getAmountOfmoney()))){
             dout.writeUTF(Constants.MONEY_ERROR+"\n"+Constants.MONEY_VALID);
             money_string = din.readUTF();
         }
         money = Float.parseFloat(money_string);
-        Client c=DB.getClient(client.getPassword(),client.getId());
-        while(money<=0 ||(((op=='w')||(op=='t'))&& money> c.getAmountOfmoney())){
-            dout.writeUTF(Constants.MONEY_ERROR+"\n"+Constants.MONEY_VALID);
-            money = Float.parseFloat(din.readUTF());
-        }
         return money;
     }
 
     public ServerObject getServer(String suffix){
-        System.out.println("suffix:"+suffix);
         String name="",ip="";
         int portNo=0;
         try {
@@ -379,21 +420,16 @@ public class Protocol {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(inputFile);
             doc.getDocumentElement().normalize();
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
             NodeList nList = doc.getElementsByTagName("Server");
 
             for (int temp = 0; temp < nList.getLength(); temp++) {
                 Node nNode = nList.item(temp);
-
-                System.out.println("still searching");
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-                    System.out.println("not just yet");
                     if(suffix.equals(eElement.getAttribute("suffix"))){
                         name = eElement.getAttribute("name");
                         ip=eElement.getAttribute("ip");
                         portNo=Integer.parseInt(eElement.getAttribute("portNo"));
-                        System.out.println("Found");
                         break;
                     }
 
@@ -406,7 +442,7 @@ public class Protocol {
 
         return new ServerObject(name,ip,suffix,portNo);
     }
-    public ServerObject getServer_fromIp(String ip){
+    public static ServerObject getServer_fromIp(String ip){
         String name="";
         int portNo=0;
         String suffix="";
@@ -418,21 +454,17 @@ public class Protocol {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(inputFile);
             doc.getDocumentElement().normalize();
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
             NodeList nList = doc.getElementsByTagName("Server");
 
             for (int temp = 0; temp < nList.getLength(); temp++) {
                 Node nNode = nList.item(temp);
 
-                System.out.println("still searching");
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element eElement = (Element) nNode;
-                    System.out.println("not just yet");
                     if(ip.equals(eElement.getAttribute("ip"))){
                         name = eElement.getAttribute("name");
                         suffix=eElement.getAttribute("suffix");
                         portNo=Integer.parseInt(eElement.getAttribute("portNo"));
-                        System.out.println("Found");
                         break;
                     }
 
@@ -446,12 +478,11 @@ public class Protocol {
         return new ServerObject(name,ip,suffix,portNo);
     }
     //get IP
-    public String get_IP(){
+    public static String get_IP(){
         String ip="";
         try(final DatagramSocket socket = new DatagramSocket()){
             socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
              ip = socket.getLocalAddress().getHostAddress();
-            System.out.println(ip);
         }
         catch (Exception e){
 
@@ -472,7 +503,6 @@ public class Protocol {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(inputFile);
             doc.getDocumentElement().normalize();
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
             NodeList nList = doc.getElementsByTagName("Client");
 
             for (int temp = 0; temp < nList.getLength(); temp++) {
