@@ -73,8 +73,9 @@ public class Protocol {
             try {
                 while(true) {
                     String who = din.readUTF();
-                    if(who.equals("police")){
+                    if(who.equals("server")){
                         //another server
+                        System.out.println("server arrived");
                         connect_with_server();
                         break;
                     }
@@ -93,6 +94,7 @@ public class Protocol {
                         client = sign_up();
                         //insert in DB
                         DB.insert_new(client);
+                        System.out.println("client arrived");
                         next_step();
                     } else {
                         dout.writeUTF(Constants.ERROR);
@@ -228,7 +230,7 @@ public class Protocol {
                             Socket c = new Socket(serverObject.getIp(),serverObject.getPortNo());
                             DataInputStream din_server = new DataInputStream(c.getInputStream());
                             DataOutputStream dout_server = new DataOutputStream(c.getOutputStream());
-                            dout_server.writeUTF("police");
+                            dout_server.writeUTF("server");
                             dout_server.writeUTF(client.getId());
                             dout_server.writeUTF(account_number.substring(4,8));
                             String found = din_server.readUTF();

@@ -6,6 +6,9 @@
         <element id="file-copy" path="$PROJECT_DIR$/src/Server/META-INF/MANIFEST.MF" />
       </element>
       <element id="module-output" name="BankProject" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/commons-codec-1.11/commons-codec-1.11-tests.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/commons-codec-1.11/commons-codec-1.11.jar" path-in-jar="/" />
       <element id="extracted-dir" path="C:/Program Files/MySQL/Connector J 8.0/mysql-connector-java-8.0.13.jar" path-in-jar="/" />
     </root>
   </artifact>
